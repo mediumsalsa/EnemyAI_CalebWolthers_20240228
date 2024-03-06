@@ -2547,8 +2547,15 @@ MonoBehaviour:
   - {fileID: 1174791776}
   player: {fileID: 705789028}
   visionAngle: 90
+  attackRange: 2
   patrolMat: {fileID: 2100000, guid: 22af953a790717c43aaeecda38adf356, type: 2}
   chaseMat: {fileID: 2100000, guid: e34f4f2e9137a1c48aa7f619b2388d9e, type: 2}
+  searchMat: {fileID: 2100000, guid: 6c5b46c2abff3694caf0b6e07cdc18b2, type: 2}
+  attackMat: {fileID: 2100000, guid: 0e67ca22cb6ea704fb151aef61a95b11, type: 2}
+  retreatMat: {fileID: 2100000, guid: 4bf960624f9d75b418ded50127afa3d3, type: 2}
+  searchDuration: 5
+  retreatDuration: 5
+  retreatTimer: 0
 --- !u!1 &1658770944
 GameObject:
   m_ObjectHideFlags: 0

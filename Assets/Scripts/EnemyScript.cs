@@ -7,20 +7,29 @@ public class NewBehaviourScript : MonoBehaviour
 {
 
     public NavMeshAgent enemy;
-
     public Transform[] points;
-
     public Transform player;
 
     private int destPoint = 0;
 
     public float visionAngle = 45f;
 
+    public float attackRange = 2f;
 
     public Material patrolMat;
     public Material chaseMat;
+    public Material searchMat;
+    public Material attackMat;
+    public Material retreatMat;
 
     private Renderer enemyRenderer;
+
+    public float searchDuration = 5f;
+    public float retreatDuration = 5f;
+    private float searchTimer;
+    public float retreatTimer;
+
+    
 
 
     public enum EnemyState
@@ -76,7 +85,13 @@ public class NewBehaviourScript : MonoBehaviour
     {
         if (CanSeePlayer())
         { 
-            currentState = EnemyState.Chasing; 
+            currentState = EnemyState.Chasing;
+            return;
+        }
+        if (CanAttackPlayer())
+        {
+            currentState = EnemyState.Attacking;
+            return;
         }
 
         enemyRenderer.material = patrolMat;
@@ -89,7 +104,13 @@ public class NewBehaviourScript : MonoBehaviour
     {
         if (!CanSeePlayer())
         {
-            currentState = EnemyState.Patrolling;
+            currentState = EnemyState.Searching;
+            searchTimer = 0f;
+            return;
+        }
+        if (CanAttackPlayer())
+        {
+            currentState = EnemyState.Attacking;
             return;
         }
 
@@ -98,15 +119,65 @@ public class NewBehaviourScript : MonoBehaviour
     }
     void SearchingUpdate()
     {
+        if (CanSeePlayer())
+        {
+            currentState = EnemyState.Chasing;
+            return;
+        }
+        if (CanAttackPlayer())
+        {
+            currentState = EnemyState.Attacking;
+            return;
+        }
 
+        enemyRenderer.material = searchMat;
+        searchTimer += Time.deltaTime;
+
+        if (!enemy.pathPending && enemy.remainingDistance < 0.05f)
+        {
+            enemy.destination = player.position;
+        }
+        if (searchTimer >= searchDuration)
+        {
+            currentState = EnemyState.Retreating;
+            retreatTimer = 0f;
+        }
     }
     void AttackingUpdate()
     {
+        if (!CanSeePlayer())
+        {
+            currentState = EnemyState.Searching;
+            searchTimer = 0f;
+            return;
+        }
+        if (!CanAttackPlayer()) 
+        {
+            currentState = EnemyState.Chasing;
+            return;
+        }
 
+        enemyRenderer.material = attackMat;
     }
     void RetreatingUpdate()
     {
+        if (CanAttackPlayer())
+        {
+            currentState = EnemyState.Attacking;
+            return;
+        }
 
+        enemyRenderer.material = retreatMat;
+        retreatTimer += Time.deltaTime;
+
+        if (!enemy.pathPending && enemy.remainingDistance < 0.05f)
+        {
+            GotoNextPoint();
+        }
+        if (retreatTimer >= retreatDuration)
+        {
+            currentState = EnemyState.Patrolling;
+        }
     }
 
 
@@ -140,6 +211,11 @@ public class NewBehaviourScript : MonoBehaviour
             }
         }
         return false;
+    }
+
+    bool CanAttackPlayer()
+    {
+        return (Vector3.Distance(transform.position, player.position) < attackRange);
     }
 
 
