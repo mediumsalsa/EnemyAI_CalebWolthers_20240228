@@ -12,11 +12,78 @@ public class NewBehaviourScript : MonoBehaviour
     private int destPoint = 0;
 
 
+
+    public enum EnemyState
+    {
+        Patrolling,
+        Chasing,
+        Searching,
+        Attacking,
+        Retreating
+    }
+    private EnemyState currentState;
+
+
     void Start()
     {
         enemy = GetComponent<NavMeshAgent>();
+        currentState = EnemyState.Patrolling;
         GotoNextPoint();
     }
+
+
+    void Update()
+    {
+
+        switch (currentState)
+        {
+            case EnemyState.Patrolling:
+                PatrollingUpdate();
+                break;
+
+            case EnemyState.Chasing:
+                ChasingUpdate();
+                break;
+
+            case EnemyState.Searching:
+                SearchingUpdate();
+                break;
+
+            case EnemyState.Attacking:
+                AttackingUpdate();
+                break;
+
+            case EnemyState.Retreating:
+                RetreatingUpdate();
+                break;
+        }
+
+    }
+
+    void PatrollingUpdate()
+    {
+        if (!enemy.pathPending && enemy.remainingDistance < 0.5f)
+        {
+            GotoNextPoint();
+        }
+    }
+    void ChasingUpdate()
+    {
+
+    }
+    void SearchingUpdate()
+    {
+
+    }
+    void AttackingUpdate()
+    {
+
+    }
+    void RetreatingUpdate()
+    {
+
+    }
+
 
     void GotoNextPoint()
     {
@@ -31,12 +98,6 @@ public class NewBehaviourScript : MonoBehaviour
     }
 
 
-    void Update()
-    {
-        if (!enemy.pathPending && enemy.remainingDistance < 0.5f)
-        {
-            GotoNextPoint();
-        }
-    }
+
 
 }
