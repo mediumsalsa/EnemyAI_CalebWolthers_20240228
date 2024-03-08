@@ -29,6 +29,8 @@ public class NewBehaviourScript : MonoBehaviour
     private float searchTimer;
     public float retreatTimer;
 
+    private Transform target;
+
     
 
 
@@ -45,17 +47,19 @@ public class NewBehaviourScript : MonoBehaviour
 
     void Start()
     {
+        currentState = EnemyState.Patrolling;
+        target = points[destPoint];
         enemy = GetComponent<NavMeshAgent>();
         enemyRenderer = GetComponent<Renderer>();
         enemyRenderer.material = patrolMat;
-        currentState = EnemyState.Patrolling;
-        GotoNextPoint();
+        GoToNextPoint();
     }
 
 
+    //Constantly checking the states for updates
     void Update()
     {
-
+        
         switch (currentState)
         {
             case EnemyState.Patrolling:
@@ -81,6 +85,7 @@ public class NewBehaviourScript : MonoBehaviour
 
     }
 
+    //Patrols between 4 locations, utill the player comes into sight
     void PatrollingUpdate()
     {
         if (CanSeePlayer())
@@ -97,9 +102,12 @@ public class NewBehaviourScript : MonoBehaviour
         enemyRenderer.material = patrolMat;
         if (!enemy.pathPending && enemy.remainingDistance < 0.5f)
         {
-            GotoNextPoint();
+            target = points[destPoint];
+            GoToNextPoint();
         }
     }
+
+    //Sets the enemies target to the player's location
     void ChasingUpdate()
     {
         if (!CanSeePlayer())
@@ -114,9 +122,12 @@ public class NewBehaviourScript : MonoBehaviour
             return;
         }
 
+        target = player;
         enemyRenderer.material = chaseMat;
-        enemy.destination = player.position;
+        enemy.destination = target.position;
     }
+
+    //Goes to the last known position of the player, for a set time, and then retreats.
     void SearchingUpdate()
     {
         if (CanSeePlayer())
@@ -135,30 +146,32 @@ public class NewBehaviourScript : MonoBehaviour
 
         if (!enemy.pathPending && enemy.remainingDistance < 0.05f)
         {
-            enemy.destination = player.position;
+            target = player;
+            enemy.destination = target.position;
         }
         if (searchTimer >= searchDuration)
         {
             currentState = EnemyState.Retreating;
             retreatTimer = 0f;
+            target = points[destPoint];
         }
     }
+
+    //Just turns the enemy red to show that he is attacking the player, if the conditions are met
     void AttackingUpdate()
     {
-        if (!CanSeePlayer())
-        {
-            currentState = EnemyState.Searching;
-            searchTimer = 0f;
-            return;
-        }
+
         if (!CanAttackPlayer()) 
         {
             currentState = EnemyState.Chasing;
             return;
         }
 
+        enemy.destination = transform.position;
         enemyRenderer.material = attackMat;
     }
+
+    //Enemy retreats, goes to the closest patrol point, for a set time, and then switches back to patrol
     void RetreatingUpdate()
     {
         if (CanAttackPlayer())
@@ -172,7 +185,8 @@ public class NewBehaviourScript : MonoBehaviour
 
         if (!enemy.pathPending && enemy.remainingDistance < 0.05f)
         {
-            GotoNextPoint();
+            target = points[destPoint];
+            GoToNextPoint();
         }
         if (retreatTimer >= retreatDuration)
         {
@@ -181,7 +195,9 @@ public class NewBehaviourScript : MonoBehaviour
     }
 
 
-    void GotoNextPoint()
+    //Sends enemy to the next patrol point
+    //I have it in it's own method because retreating sends the enemy to a patrol point too
+    void GoToNextPoint()
     {
         if (points.Length == 0)
         {
@@ -193,6 +209,8 @@ public class NewBehaviourScript : MonoBehaviour
         destPoint = (destPoint + 1) % points.Length;
     }
 
+
+    //Returns a bool, depending on if the player is in vision or not
     bool CanSeePlayer()
     {
         Vector3 direction = player.position - transform.position;
@@ -213,6 +231,8 @@ public class NewBehaviourScript : MonoBehaviour
         return false;
     }
 
+
+    //Returns a bool depending on if the player is in attak range or not, regardless of if the player is in sight.
     bool CanAttackPlayer()
     {
         return (Vector3.Distance(transform.position, player.position) < attackRange);
