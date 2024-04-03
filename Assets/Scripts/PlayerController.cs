@@ -51,7 +51,11 @@ public class PlayerController : MonoBehaviour
         {
             currentMovement.y = jumpSpeed;
         }
-        currentMovement.y -= gravity * Time.deltaTime;
+        if (!characterController.isGrounded)
+        {
+            currentMovement.y -= gravity * Time.deltaTime;
+        }
+
         characterController.Move(currentMovement * Time.deltaTime);
 
         HandleMovement();
