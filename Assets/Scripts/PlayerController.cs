@@ -8,8 +8,11 @@ public class PlayerController : MonoBehaviour
     [Header("Movement Settings")]
     [SerializeField] private float walkSpeed = 3.0f;
     [SerializeField] private float runSpeed = 5.0f;
+    [SerializeField] private float crouchSpeed = 1.5f;
     [SerializeField] private float jumpSpeed = 5.0f;
     [SerializeField] private float gravity = 10.0f;
+    [SerializeField] private Vector3 teleportPoint = new Vector3(0, 0.95f, 0);
+
 
     [Header("Look Settings")]
     [SerializeField] private float mouseSensitivity = 2.0f;
@@ -17,11 +20,15 @@ public class PlayerController : MonoBehaviour
 
 
     [Header("Spawn Settings")]
-    [SerializeField] private Vector3 spawnPoint = new Vector3(18.0f, 1.5f, 4.5f);
+    [SerializeField] private Vector3 spawnPoint = new Vector3(0, 0.95f, 0);
+
 
     private static float originalHeight = 1.8f;
+    private static float growHeight = 7.2f;
+
 
     private static float currentHeight = originalHeight;
+
 
     float currentSpeed;
 
@@ -33,11 +40,17 @@ public class PlayerController : MonoBehaviour
 
     private CharacterController characterController;
 
+    private Rigidbody rb;
+
+
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
 
         characterController = this.GetComponent<CharacterController>();
+
+        rb = this.GetComponent<Rigidbody>();
 
         playerCamera = GetComponentInChildren<Camera>();
     }
@@ -45,22 +58,31 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+
         characterController.height = currentHeight;
+
 
         if (characterController.isGrounded && Input.GetKey(KeyCode.Space))
         {
             currentMovement.y = jumpSpeed;
         }
-        if (!characterController.isGrounded)
-        {
-            currentMovement.y -= gravity * Time.deltaTime;
-        }
-
+        currentMovement.y -= gravity * Time.deltaTime;
         characterController.Move(currentMovement * Time.deltaTime);
 
         HandleMovement();
 
         HandleLook();
+
+
+
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.gameObject.tag == "SpawnCube")
+        {
+            //CubeGenerator.SpawnCube();
+        }
     }
 
 
@@ -79,19 +101,65 @@ public class PlayerController : MonoBehaviour
         {
             spawnPoint = gameObject.transform.position;
         }
+
+        if (other.CompareTag("DoorButton"))
+        {
+            //OpenDoor.IsPlayerInside = true;
+        }
+
+        if (other.CompareTag("BirdButton"))
+        {
+            currentMovement.y = 12;
+        }
+
+        if (other.CompareTag("Shrink"))
+        {
+            currentHeight = originalHeight;
+
+            jumpSpeed = 5;
+        }
+
+        if (other.CompareTag("Grow"))
+        {
+            currentHeight = growHeight;
+
+            jumpSpeed = 15;
+        }
+
+
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("DoorButton"))
+        {
+            //OpenDoor.IsPlayerInside = false;
+        }
     }
 
 
     void HandleMovement()
     {
+
+
         if (Input.GetKey(KeyCode.LeftShift))
         {
-            currentSpeed = runSpeed;
+            if (!Input.GetKey("c"))
+            {
+                currentSpeed = runSpeed;
+            }
         }
+        else if (Input.GetKey("c"))
+        {
+            currentSpeed = crouchSpeed;
+        }
+
         else
         {
             currentSpeed = walkSpeed;
         }
+
+
         Vector3 horizontalMovement = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
 
         horizontalMovement = transform.rotation * horizontalMovement;
@@ -99,8 +167,19 @@ public class PlayerController : MonoBehaviour
         currentMovement.x = horizontalMovement.x * currentSpeed;
         currentMovement.z = horizontalMovement.z * currentSpeed;
 
+
+
         characterController.Move(currentMovement * Time.deltaTime);
+
+
+        if (Input.GetKeyDown("e"))
+        {
+            characterController.enabled = false;
+            gameObject.transform.position = teleportPoint;
+            characterController.enabled = true;
+        }
     }
+
 
 
     void HandleLook()
@@ -110,6 +189,7 @@ public class PlayerController : MonoBehaviour
 
         verticalRotation -= Input.GetAxis("Mouse Y") * mouseSensitivity;
         verticalRotation = Mathf.Clamp(verticalRotation, -upDownLimit, upDownLimit);
+
 
         playerCamera.transform.localRotation = Quaternion.Euler(verticalRotation, 0, 0);
     }

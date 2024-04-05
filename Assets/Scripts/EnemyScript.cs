@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityStandardAssets.Characters.ThirdPerson;
 
 public class NewBehaviourScript : MonoBehaviour
 {
@@ -22,7 +23,7 @@ public class NewBehaviourScript : MonoBehaviour
     public Material attackMat;
     public Material retreatMat;
 
-    private Renderer enemyRenderer;
+    public Renderer enemyRenderer;
 
     public float searchDuration = 5f;
     public float retreatDuration = 5f;
@@ -31,6 +32,7 @@ public class NewBehaviourScript : MonoBehaviour
 
     private Transform target;
 
+    public ThirdPersonCharacter character;
     
 
 
@@ -47,10 +49,12 @@ public class NewBehaviourScript : MonoBehaviour
 
     void Start()
     {
+        enemy.updateRotation = false;
+
         currentState = EnemyState.Patrolling;
         target = points[destPoint];
         enemy = GetComponent<NavMeshAgent>();
-        enemyRenderer = GetComponent<Renderer>();
+        //enemyRenderer = GetComponent<Renderer>();
         enemyRenderer.material = patrolMat;
         GoToNextPoint();
     }
@@ -82,6 +86,16 @@ public class NewBehaviourScript : MonoBehaviour
                 RetreatingUpdate();
                 break;
         }
+
+        if (enemy.remainingDistance > enemy.stoppingDistance)
+        {
+            character.Move(enemy.desiredVelocity, false, false);
+        }
+        else
+        {
+            character.Move(Vector3.zero, false, false);
+        }
+
 
     }
 
