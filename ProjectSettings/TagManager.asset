@@ -5,6 +5,12 @@ TagManager:
   serializedVersion: 2
   tags:
   - Gold
+  - Checkpoint
+  - CheckPoint
+  - Killbox
+  - DoorButton
+  - BirdButton
+  - Teleporter
   layers:
   - Default
   - TransparentFX

@@ -20,11 +20,20 @@ public class PlayerController : MonoBehaviour
 
 
     [Header("Spawn Settings")]
-    [SerializeField] private Vector3 spawnPoint = new Vector3(0, 0.95f, 0);
+    [SerializeField] private Vector3 spawnPoint = new Vector3(31.55f, 1.58f, 4.5f);
 
 
     private static float originalHeight = 1.8f;
     private static float growHeight = 7.2f;
+
+
+    //Sounds
+    public AudioClip teleportSound;
+    public AudioClip jumpPadSound;
+    public AudioClip deadSound;
+
+    private AudioSource audioSource;
+
 
 
     private static float currentHeight = originalHeight;
@@ -40,6 +49,11 @@ public class PlayerController : MonoBehaviour
 
     private CharacterController characterController;
 
+    private Teleporter teleporter;
+
+    public float teleportCooldown = 2f;
+    private float lastTeleportTime = -Mathf.Infinity;
+
     private Rigidbody rb;
 
 
@@ -49,6 +63,8 @@ public class PlayerController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
 
         characterController = this.GetComponent<CharacterController>();
+
+        audioSource = GetComponent<AudioSource>();
 
         rb = this.GetComponent<Rigidbody>();
 
@@ -81,7 +97,7 @@ public class PlayerController : MonoBehaviour
     {
         if (other.gameObject.tag == "SpawnCube")
         {
-            //CubeGenerator.SpawnCube();
+            CubeGenerator.SpawnCube();
         }
     }
 
@@ -90,11 +106,14 @@ public class PlayerController : MonoBehaviour
     {
         if (other.gameObject.tag == "Killbox")
         {
-            currentHeight = originalHeight;
-            jumpSpeed = 5;
+            if (deadSound != null && audioSource != null)
+            {
+                audioSource.PlayOneShot(deadSound);
+            }
             characterController.enabled = false;
             gameObject.transform.position = spawnPoint;
             characterController.enabled = true;
+
         }
 
         if (other.gameObject.tag == "CheckPoint")
@@ -104,26 +123,33 @@ public class PlayerController : MonoBehaviour
 
         if (other.CompareTag("DoorButton"))
         {
-            //OpenDoor.IsPlayerInside = true;
+            OpenDoor.IsPlayerInside = true;
         }
 
         if (other.CompareTag("BirdButton"))
         {
             currentMovement.y = 12;
+            if (jumpPadSound != null && audioSource != null)
+            {
+                audioSource.PlayOneShot(jumpPadSound);
+            }
         }
 
-        if (other.CompareTag("Shrink"))
+        if (other.CompareTag("Teleporter") && CanTeleport())
         {
-            currentHeight = originalHeight;
+            Teleporter teleporter = other.GetComponent<Teleporter>();
 
-            jumpSpeed = 5;
-        }
-
-        if (other.CompareTag("Grow"))
-        {
-            currentHeight = growHeight;
-
-            jumpSpeed = 15;
+            if (teleporter != null && Teleporter.teleporterDestinations.ContainsKey(teleporter))
+            {
+                characterController.enabled = false;
+                transform.position = Teleporter.teleporterDestinations[teleporter].position;
+                characterController.enabled = true;
+                lastTeleportTime = Time.time;
+            }
+            if (teleportSound != null && audioSource != null)
+            {
+                audioSource.PlayOneShot(teleportSound);
+            }
         }
 
 
@@ -133,8 +159,14 @@ public class PlayerController : MonoBehaviour
     {
         if (other.CompareTag("DoorButton"))
         {
-            //OpenDoor.IsPlayerInside = false;
+            OpenDoor.IsPlayerInside = false;
         }
+    }
+
+
+    bool CanTeleport()
+    {
+        return Time.time - lastTeleportTime >= teleportCooldown;
     }
 
 
