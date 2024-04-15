@@ -9,7 +9,7 @@ public class CubeGenerator : MonoBehaviour
 
     static GameObject newObject;
 
-    [SerializeField]private static Vector3 spawnLocation = new Vector3(-104.5f, 7.07f, -111.85f);
+    [SerializeField]private static Vector3 spawnLocation = new Vector3(-147.5f, 28.27f, -116.85f);
 
     public static void SpawnCube()
     {

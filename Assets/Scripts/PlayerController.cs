@@ -95,7 +95,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.gameObject.tag == "SpawnCube")
+        if (other.gameObject.tag == "CubeGenerator")
         {
             CubeGenerator.SpawnCube();
         }
